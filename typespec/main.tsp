@@ -736,6 +736,45 @@ model UserConfig {
   bots: string[];
 }
 
+@doc("Health status of a single bot")
+model BotHealthStatus {
+  @doc("Redacted bot token (first 10 chars)")
+  token: string;
+
+  @doc("Whether the bot is currently available for selection")
+  available: boolean;
+
+  @doc("Number of consecutive failures (resets on success or cooldown)")
+  consecutiveFailures: int64;
+
+  @doc("Total failures since server start")
+  totalFailures: int64;
+
+  @doc("Total successes since server start")
+  totalSuccesses: int64;
+
+  @doc("Number of times the circuit breaker has tripped")
+  circuitTrips: int64;
+
+  @doc("Last error message (empty if no failures)")
+  lastError?: string;
+
+  @doc("When the circuit will close (null if circuit is closed)")
+  openUntil?: utcDateTime;
+}
+
+@doc("Aggregated bot health response")
+model BotHealthResponse {
+  @doc("Per-bot health status")
+  bots: BotHealthStatus[];
+
+  @doc("Circuit breaker failure threshold")
+  failureThreshold: integer;
+
+  @doc("Circuit breaker cooldown in seconds")
+  cooldownSeconds: integer;
+}
+
 @route("/users")
 @tag("Users")
 @useAuth(ApiAuth)
@@ -799,6 +838,11 @@ interface Users {
   @delete
   @summary("Remove bots from user account")
   removeBots(): NoContentResponse | Error;
+
+  @route("/bots/health")
+  @get
+  @summary("Get bot health status")
+  botsHealth(): BotHealthResponse | Error;
 
   @route("/sessions/{id}")
   @delete

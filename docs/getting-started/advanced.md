@@ -54,6 +54,15 @@ Bot tokens are essential for optimal Telegram API interaction. To create and add
 > Bots will be automatically added as admins in your channel when set through the UI. If this fails, add them manually.
 > For newly created Telegram sessions, you must wait 20-30 minutes before adding bots to a channel. You'll see a **`FRESH_CHANGE_ADMINS_FORBIDDEN`** error if you try too soon.
 
+## Bot Health
+
+The settings page now exposes **Bot Health** to help with debugging streaming issues.
+
+- Healthy bots are used normally for downloads.
+- If a bot repeatedly fails, it is temporarily disabled for a cooldown window.
+- A bot can still be retried automatically during cooldown recovery so traffic can resume automatically once recovered.
+- Open `/settings/account` in the Teldrive UI to view live bot status, failure counters and cooldown countdown.
+
 ## Using a Thumbnail Resizer
 
 Teldrive supports on-the-fly image resizing using `imgproxy` for thumbnail viewing:

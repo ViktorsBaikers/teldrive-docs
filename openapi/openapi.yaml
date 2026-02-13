@@ -1064,6 +1064,29 @@ paths:
       security:
         - BearerAuth: []
         - ApiKeyAuth: []
+  /users/bots/health:
+    get:
+      operationId: Users_botsHealth
+      summary: Get bot health status
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotHealthResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
   /users/channels:
     get:
       operationId: Users_listChannels
@@ -1628,6 +1651,65 @@ components:
           type: string
           description: Architecture
           example: amd64
+    BotHealthResponse:
+      type: object
+      required:
+        - bots
+        - failureThreshold
+        - cooldownSeconds
+      properties:
+        bots:
+          type: array
+          items:
+            $ref: '#/components/schemas/BotHealthStatus'
+          description: Per-bot health status
+        failureThreshold:
+          type: integer
+          description: Circuit breaker failure threshold
+        cooldownSeconds:
+          type: integer
+          description: Circuit breaker cooldown in seconds
+      description: Aggregated bot health response
+    BotHealthStatus:
+      type: object
+      required:
+        - token
+        - available
+        - consecutiveFailures
+        - totalFailures
+        - totalSuccesses
+        - circuitTrips
+      properties:
+        token:
+          type: string
+          description: Redacted bot token (first 10 chars)
+        available:
+          type: boolean
+          description: Whether the bot is currently available for selection
+        consecutiveFailures:
+          type: integer
+          format: int64
+          description: Number of consecutive failures (resets on success or cooldown)
+        totalFailures:
+          type: integer
+          format: int64
+          description: Total failures since server start
+        totalSuccesses:
+          type: integer
+          format: int64
+          description: Total successes since server start
+        circuitTrips:
+          type: integer
+          format: int64
+          description: Number of times the circuit breaker has tripped
+        lastError:
+          type: string
+          description: Last error message (empty if no failures)
+        openUntil:
+          type: string
+          format: date-time
+          description: When the circuit will close (null if circuit is closed)
+      description: Health status of a single bot
     Category:
       type: string
       enum:
