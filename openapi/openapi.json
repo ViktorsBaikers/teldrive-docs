@@ -359,6 +359,9 @@
           },
           {
             "$ref": "#/components/parameters/FileQuery.page"
+          },
+          {
+            "$ref": "#/components/parameters/FileQuery.cursor"
           }
         ],
         "responses": {
@@ -1834,6 +1837,90 @@
         ]
       }
     },
+    "/users/bots/diagnostics": {
+      "get": {
+        "operationId": "Users_botsDiagnostics",
+        "summary": "Get bot/channel diagnostics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotDiagnosticsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/users/bots/{id}": {
+      "delete": {
+        "operationId": "Users_removeBot",
+        "summary": "Remove a single bot from user account",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Bot token ID (prefix before ':')",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/users/channels": {
       "get": {
         "operationId": "Users_listChannels",
@@ -2308,6 +2395,16 @@
         },
         "explode": false
       },
+      "FileQuery.cursor": {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "description": "Cursor token for keyset pagination (use with operation=list). For sort=id this can be the last seen id; otherwise treat as an opaque token.",
+        "schema": {
+          "type": "string"
+        },
+        "explode": false
+      },
       "FileQuery.name": {
         "name": "name",
         "in": "query",
@@ -2731,6 +2828,78 @@
           }
         },
         "description": "Health status of a single bot"
+      },
+      "BotDiagnosticsResponse": {
+        "type": "object",
+        "required": [
+          "bots"
+        ],
+        "properties": {
+          "channelId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Channel used for diagnostics (current selected channel, if any)"
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotDiagnostics"
+            },
+            "description": "Per-bot diagnostic results"
+          }
+        },
+        "description": "Bot and channel diagnostics response"
+      },
+      "BotDiagnostics": {
+        "type": "object",
+        "required": [
+          "tokenId",
+          "checks"
+        ],
+        "properties": {
+          "tokenId": {
+            "type": "string",
+            "description": "Bot token ID (prefix before ':')"
+          },
+          "userName": {
+            "type": "string",
+            "description": "Bot username"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotDiagnosticCheck"
+            },
+            "description": "Individual diagnostic checks and suggested fixes"
+          }
+        },
+        "description": "Diagnostic status for a single bot"
+      },
+      "BotDiagnosticCheck": {
+        "type": "object",
+        "required": [
+          "name",
+          "ok"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Check identifier (e.g. token_valid, channel_accessible, member, admin)"
+          },
+          "ok": {
+            "type": "boolean",
+            "description": "Whether the check succeeded"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable detail about the check"
+          },
+          "action": {
+            "type": "string",
+            "description": "Suggested action to fix the issue, if any"
+          }
+        },
+        "description": "Single diagnostic check result"
       },
       "Category": {
         "type": "string",
@@ -3258,8 +3427,8 @@
           },
           "totalPages": {
             "type": "integer",
-            "minimum": 1,
-            "description": "Total number of available pages based on limit",
+            "minimum": 0,
+            "description": "Total number of available pages based on limit (0 when unknown, e.g. cursor pagination)",
             "example": 25
           },
           "currentPage": {
@@ -3267,6 +3436,14 @@
             "minimum": 1,
             "description": "Current page number in the pagination",
             "example": 1
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether more items are available (cursor pagination)"
+          },
+          "nextCursor": {
+            "type": "string",
+            "description": "Cursor token for the next page (cursor pagination)"
           }
         },
         "description": "Pagination metadata containing count, page information"
